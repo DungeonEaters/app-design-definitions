@@ -1,0 +1,37 @@
+{
+  "workspace": {
+    "name": "app-design-definitions",
+    "type": "technical-documentation",
+    "language": "es-ES",
+    "focus": [
+      "architecture",
+      "design-specifications",
+      "environment-configuration",
+      "ci-cd"
+    ]
+  },
+  "copilot": {
+    "profile": "principal-architect",
+    "responseStyle": "professional",
+    "verbosity": "medium",
+    "defaultOutputFormat": "markdown",
+    "enforceStructuredDocs": true,
+    "priorities": [
+      "clarity",
+      "traceability",
+      "security",
+      "maintainability"
+    ]
+  },
+  "plugins": {
+    "superpowers": {
+      "enabled": true,
+      "mode": "workspace",
+      "capabilities": [
+        "scaffolding",
+        "refactoring",
+        "documentation-assist"
+      ]
+    }
+  }
+}
