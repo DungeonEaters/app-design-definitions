@@ -6,8 +6,8 @@
     "focus": [
       "architecture",
       "design-specifications",
-      "environment-configuration",
-      "ci-cd"
+      "application-definitions",
+      "technical-decisions"
     ]
   },
   "copilot": {
