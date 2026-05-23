@@ -1,58 +1,34 @@
 # App Design Definitions
 
-Repositorio central para documentación técnica y decisiones de arquitectura.  
-Aquí se consolidan estándares de diseño, definiciones por aplicación/módulo, configuración de entornos y lineamientos de CI/CD.
+Repositorio central para guardar definiciones de diseño y decisiones de arquitectura de distintas aplicaciones y módulos.
 
 ## Estructura base
 
 ```text
 .
-├── architecture/
-│   ├── frontend-web/
-│   │   ├── react/
-│   │   ├── astro/
-│   │   └── tailwind/
-│   └── mobile-games/
-│       ├── csharp/
-│       └── unity/
-├── devops/
-│   ├── environments/
-│   │   ├── development/
-│   │   ├── staging/
-│   │   └── production/
-│   └── cicd/
-│       ├── github-actions/
-│       └── sftp/
-├── team-rules/
+├── applications/
+│   └── <app-o-modulo>/
 ├── template-architecture.md
 └── opencode.json
 ```
 
-## Propósito de cada carpeta
+## Propósito de cada elemento
 
-- `architecture/frontend-web/`: definiciones para aplicaciones web modernas (React, Astro, Tailwind).
-- `architecture/mobile-games/`: definiciones para aplicaciones móviles y juegos (C#, Unity).
-- `devops/environments/`: configuración y diferencias por entorno (Desarrollo, Staging, Producción).
-- `devops/cicd/`: flujos de automatización, pipelines y despliegues (GitHub Actions, SFTP).
-- `team-rules/`: estándares transversales del equipo (naming, versionado, code review, release process).
-- `template-architecture.md`: plantilla base para documentar nuevas aplicaciones o módulos.
-- `opencode.json`: configuración de workspace para Copilot y plugin `superpowers`.
+- `applications/`: archivador principal con una carpeta por aplicación o módulo.
+- `template-architecture.md`: plantilla base para documentar una definición de diseño.
+- `opencode.json`: configuración del workspace para mantener el enfoque del repositorio.
 
-## Cómo contribuir
+## Cómo usar este repositorio
 
-1. Crea o actualiza documentación en la carpeta correspondiente.
-2. Usa `template-architecture.md` como base para nuevas definiciones.
-3. Mantén trazabilidad de decisiones (fecha, contexto, impacto y responsables).
-4. Abre un Pull Request con:
-   - objetivo claro,
-   - alcance delimitado,
-   - cambios en estructura o estándares (si aplica).
-5. Solicita revisión técnica antes de merge.
+1. Crea una carpeta dentro de `applications/` para la aplicación o módulo.
+2. Usa `template-architecture.md` como base para el documento principal.
+3. Mantén solo información útil al nivel de diseño: contexto, alcance, arquitectura, componentes, decisiones y riesgos.
+4. Evita bajar a detalles de entornos, despliegues o automatizaciones si no afectan directamente el diseño.
 
-## Convención recomendada para nuevos documentos
+## Convención recomendada
 
-- Nombre de archivo: `architecture-<dominio>-<modulo>.md`
-- Ejemplos:
-  - `architecture-web-checkout.md`
-  - `architecture-mobile-auth.md`
-  - `architecture-devops-release-pipeline.md`
+- Carpeta por aplicación o módulo: `applications/<app-o-modulo>/`
+- Documento principal sugerido: `applications/<app-o-modulo>/architecture.md`
+- Documentos adicionales opcionales:
+  - `applications/<app-o-modulo>/decisions.md`
+  - `applications/<app-o-modulo>/diagrams/`

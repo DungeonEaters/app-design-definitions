@@ -2,7 +2,7 @@
 
 ## 1) Resumen Ejecutivo
 - **Objetivo:**  
-- **Dominio:** Web / Mobile / Game / DevOps / Integración  
+- **Aplicación o módulo:**  
 - **Estado:** Draft / En revisión / Aprobado  
 - **Responsable técnico:**  
 - **Última actualización:** YYYY-MM-DD
@@ -25,8 +25,8 @@
 - Rendimiento:
 - Seguridad:
 - Escalabilidad:
-- Disponibilidad:
-- Observabilidad:
+- Mantenibilidad:
+- Experiencia de uso:
 
 ## 4) Arquitectura Propuesta
 ### 4.1 Diagrama de alto nivel
@@ -42,57 +42,39 @@
 2.
 3.
 
-## 5) Diseño Técnico
-### 5.1 Contratos e interfaces
+## 5) Diseño Funcional y Técnico
+### 5.1 Casos de uso o flujos clave
+- 
+
+### 5.2 Contratos e interfaces
 - APIs:
 - Eventos:
 - Integraciones externas:
 
-### 5.2 Modelo de datos
+### 5.3 Modelo de datos
 - Entidades principales:
 - Relaciones:
 - Retención y trazabilidad:
 
-### 5.3 Estrategia por entorno
-- **Development:**
-- **Staging:**
-- **Production:**
-
-## 6) CI/CD y Operación
-- **Build pipeline:**
-- **Testing pipeline:**
-- **Deploy strategy:**
-- **Rollback plan:**
-- **Canales de monitoreo y alertas:**
-
-## 7) Seguridad y Cumplimiento
-- Gestión de secretos:
-- Control de acceso:
-- Validación de inputs:
-- Dependencias y vulnerabilidades:
-- Auditoría y logs:
-
-## 8) Riesgos y Mitigaciones
-| Riesgo | Impacto | Mitigación | Dueño |
-|---|---|---|---|
-| | | | |
-
-## 9) Decisiones de Arquitectura (ADR breve)
+## 6) Decisiones de Arquitectura (ADR breve)
 | ID | Decisión | Alternativas evaluadas | Motivo | Fecha |
 |---|---|---|---|---|
 | ADR-001 | | | | |
 
-## 10) Plan de Implementación
-- **Fase 1:**
-- **Fase 2:**
-- **Fase 3:**
+## 7) Riesgos y Mitigaciones
+| Riesgo | Impacto | Mitigación | Dueño |
+|---|---|---|---|
+| | | | |
 
-## 11) Criterios de Aceptación
+## 8) Preguntas Abiertas y Próximos Pasos
+- 
+
+## 9) Criterios de Aceptación
 - [ ]
 - [ ]
 - [ ]
 
-## 12) Referencias
+## 10) Referencias
 - Documentos relacionados:
 - Repositorios:
 - Tickets/Issues:
