@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# macOS filesystem metadata
+._*
+
+# Finder folder attributes
+.Trashes/
+
+# Temporary files
+*.swp
+*.swo

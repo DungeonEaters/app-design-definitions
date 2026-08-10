@@ -10,7 +10,7 @@ Central repository for design and architecture documentation across applications
 
 ```
 applications/
-├── merge-tower/
+├── eras-defense/
 │   ├── architecture.md          # Main design doc
 │   ├── implementation-plan.md   # Execution roadmap
 │   ├── backlog.md               # Feature backlog & decisions
@@ -92,5 +92,5 @@ Build & test: See [merge-tower-unity CI/CD](./.github/workflows/build.yml).
 
 ## References
 
-- [Merge Tower Architecture](applications/merge-tower/architecture.md)
+- [Eras Defense Architecture](applications/eras-defense/architecture.md)
 - [Merge Tower Implementation](../merge-tower-unity/AGENTS.md)
