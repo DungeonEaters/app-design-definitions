@@ -4,33 +4,42 @@ Prioridad: **P0** MVP · **P1** post-MVP cercano · **P2** futuro. Fases en [imp
 
 ## MVP (P0)
 ### Fase 1
-- [ ] T1.1 Modelar entidades y diagrama de BD (Usuario, Cliente, Punto, Camión, Ruta, Parada, Pesaje)
-- [ ] T1.2 Configurar repositorios (backend, frontend, móvil)
-- [ ] T1.3 Docker Compose con FastAPI + PostgreSQL
+- [x] T1.1 Modelar entidades y diagrama de BD (Usuario, Cliente, Punto, Camión, Ruta, Parada, Pesaje)
+- [x] T1.2 Configurar repositorios (backend, frontend, móvil)
+- [x] T1.3 Docker Compose con FastAPI + PostgreSQL
 ### Fase 2
-- [ ] T2.1 Auth y roles (chofer/admin)
-- [ ] T2.2 CRUD clientes, condominios y puntos con GPS
-- [ ] T2.3 CRUD camiones y asignación
-- [ ] T2.4 Integración Routes API con `optimizeWaypointOrder` (≤25 puntos)
-- [ ] T2.5 Endpoint de rutas (crear, asignar, estado de paradas)
-- [ ] T2.6 Endpoint de pesaje idempotente (UUID cliente)
-- [ ] T2.7 Exportación CSV de trazabilidad
+- [x] T2.1 Auth y roles (chofer/admin)
+- [x] T2.2 CRUD clientes, condominios y puntos con GPS
+- [x] T2.3 CRUD camiones y asignación
+- [x] T2.4 Integración Routes API con `optimizeWaypointOrder` (≤25 puntos)
+- [x] T2.5 Endpoint de rutas (crear, asignar, estado de paradas)
+- [x] T2.6 Endpoint de pesaje idempotente (UUID cliente)
+- [x] T2.7 Exportación CSV de trazabilidad
 ### Fase 3
-- [ ] T3.1 Layout y login del panel (Tailwind + shadcn/ui)
-- [ ] T3.2 Gestión comercial
-- [ ] T3.3 Asignación de rutas
-- [ ] T3.4 Dashboard de progreso y kilos
-- [ ] T3.5 Descarga de planillas CSV
+- [x] T3.1 Layout y login del panel (Tailwind + shadcn/ui)
+- [x] T3.2 Gestión comercial
+- [x] T3.3 Asignación de rutas
+- [x] T3.4 Dashboard de progreso y kilos
+- [x] T3.5 Descarga de planillas CSV
 ### Fase 4
-- [ ] T4.1 Proyecto Ionic + Capacitor, login
-- [ ] T4.2 Vista de ruta activa + deep link Waze/Google Maps
-- [ ] T4.3 Formulario de pesaje
-- [ ] T4.4 Cola offline y sincronización
+- [x] T4.1 Proyecto Ionic + Capacitor, login
+- [x] T4.2 Vista de ruta activa + deep link Waze/Google Maps
+- [x] T4.3 Formulario de pesaje
+- [x] T4.4 Cola offline y sincronización
 - [ ] T4.5 Empaquetado iOS/Android
 ### Fase 5
 - [ ] T5.1 Pruebas físicas sin señal
 - [ ] T5.2 Validación de rutas vs. realidad
 - [ ] T5.3 Despliegue a producción
+
+## Deuda técnica surgida en la implementación
+- [ ] D-01 Migraciones con Alembic (hoy `create_all`)
+- [ ] D-02 Endurecer auth: secreto por entorno, refresh/rotación de tokens, rate limit en login
+- [ ] D-03 Validar integración Google Routes con clave real y cuota
+- [ ] D-04 Omitir parada en modo offline (hoy requiere conexión)
+- [ ] D-05 Tests e2e automatizados (Playwright) del flujo admin → chofer → dashboard
+- [ ] D-06 Lint/format (ruff, eslint) en CI
+- [ ] D-07 Pipeline de despliegue (imágenes, VPS, CDN)
 
 ## Post-MVP
 | ID | Ítem | Prioridad | Notas |

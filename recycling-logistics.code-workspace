@@ -1,0 +1,6 @@
+{
+  "folders": [
+    { "name": "app-design-definitions (docs)", "path": "." },
+    { "name": "recycling-logistics (code)", "path": "../recycling-logistics" }
+  ]
+}

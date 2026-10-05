@@ -3,9 +3,10 @@
 ## 1) Resumen Ejecutivo
 - **Objetivo:** Optimizar la recolección punto a punto de plásticos/material reciclable, digitalizando pesaje, rutas y trazabilidad (Ley REP, Chile).
 - **Aplicación:** `recycling-logistics` (API + panel web B2B + app móvil de choferes).
-- **Estado:** Draft
+- **Estado:** En implementación (MVP local funcionando)
 - **Responsable técnico:** Por definir
-- **Última actualización:** 2026-10-04
+- **Última actualización:** 2026-10-05
+- **Repositorio de implementación:** [JulioRom/recycling-logistics](https://github.com/JulioRom/recycling-logistics) (monorepo: `backend/`, `web/`, `mobile/`)
 - **Origen:** Conversación con Gemini, ver [conversation-gemini.md](conversation-gemini.md) y [sources/](sources/).
 
 ## 2) Contexto y Alcance
@@ -15,7 +16,7 @@ Un camión llega a un punto (edificio, condominio, empresa), pesa los kilos de p
 ### 2.2 Alcance incluido (MVP)
 - Panel web: CRUD de clientes/condominios/puntos con GPS, asignación de rutas optimizadas, dashboard de progreso y kilos, exportación CSV de trazabilidad.
 - App móvil de choferes: login, ruta activa con navegación a Waze/Google Maps, registro de pesaje, tolerancia offline con sincronización.
-- Optimización de ruteo vía Google Maps Routes API (`optimizeWaypointOrder`), lotes de hasta 25 puntos.
+- Optimización de ruteo vía Google Maps Routes API (`optimizeWaypointOrder`), lotes de hasta 25 puntos, con optimizador local (vecino más cercano + 2-opt) cuando no hay clave de Google o la API falla.
 
 ### 2.3 Fuera de alcance (MVP)
 Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
@@ -35,10 +36,11 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 | RF-02 | Seleccionar puntos del día, optimizar orden vía API y asignar ruta a camión/chofer | Web |
 | RF-03 | Dashboard en tiempo real: puntos visitados vs. pendientes, kilos por camión/jornada | Web |
 | RF-04 | Exportar planillas CSV para auditoría y certificados | Web |
-| RF-05 | Autenticación de operarios (y diferenciación chofer/administrador) | Móvil/API |
+| RF-05 | Autenticación JWT con roles `admin` y `driver`; un chofer solo ve y pesa sus rutas | Móvil/API |
 | RF-06 | Lista cronológica de visitas con botón de navegación a Waze/Google Maps | Móvil |
 | RF-07 | Formulario de pesaje in-situ (kilos recibidos) | Móvil |
-| RF-08 | Guardado local de pesajes sin red y sincronización posterior | Móvil |
+| RF-08 | Guardado local de pesajes sin red y sincronización posterior idempotente (lote) | Móvil |
+| RF-09 | Omitir parada (requiere conexión en el MVP) | Móvil |
 
 ### 3.2 No funcionales
 - **Rendimiento:** API asíncrona; muchas peticiones simultáneas de choferes.
@@ -46,7 +48,8 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 - **Escalabilidad:** Esquema relacional con camino a PostGIS; camino a motor VRP propio.
 - **Mantenibilidad:** Contenedores Docker; frontend y backend desacoplados vía API.
 - **Experiencia de uso:** UI táctil nativa (Ionic) para choferes; UI B2B limpia (shadcn/ui).
-- **Resiliencia offline:** Ningún pesaje se pierde por falta de señal o limpieza de caché.
+- **Resiliencia offline:** Ningún pesaje se pierde por falta de señal o limpieza de caché (cola persistida con Capacitor Preferences, no solo IndexedDB).
+- **Zona horaria de negocio:** `America/Santiago` para "hoy" y filtros de reportes; los instantes se guardan en UTC.
 - **Costo:** Costos fijos mensuales < ~$30 USD en los primeros meses.
 
 ## 4) Arquitectura Propuesta
@@ -66,16 +69,17 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 ### 4.2 Componentes principales
 | Componente | Responsabilidad | Tecnología |
 |---|---|---|
-| Backend / API | Usuarios, clientes, puntos, rutas, pesajes, exportes; integra ruteo | Python, FastAPI |
+| Backend / API | Usuarios/auth, clientes, puntos, camiones, rutas, pesajes, dashboard y exportes; integra ruteo | Python 3.12, FastAPI, SQLAlchemy 2, JWT |
 | Base de datos | Persistencia relacional y futura capa geoespacial | PostgreSQL (+PostGIS futuro) |
-| Panel Admin | Gestión comercial, asignación de rutas, dashboard, trazabilidad | Astro o React, Tailwind, shadcn/ui (Tremor opcional para gráficos) |
-| App Móvil | Ruta activa, pesaje, offline sync | Capacitor + Ionic UI |
-| Motor de ruteo (MVP) | Ordenar paradas (VRP simple) | Google Maps Routes API, `optimizeWaypointOrder` |
+| Panel Admin | Gestión comercial, asignación de rutas, dashboard, trazabilidad | React 18 + Vite, Tailwind v4, componentes estilo shadcn/ui, TanStack Query, Leaflet |
+| App Móvil | Ruta activa, pesaje, offline sync | React + Vite, Ionic UI, Capacitor (Preferences) |
+| Motor de ruteo (MVP) | Ordenar paradas (VRP simple) | Google Routes API `optimizeWaypointOrder`; respaldo local NN + 2-opt |
 | Infra | Contenedores del backend + DB; CDN para frontend | Docker Compose en VPS; Vercel / Cloudflare Pages |
+| Entorno y CI | Entorno replicable y verificación automática | Dev Container (Python + Node + Postgres), GitHub Actions |
 
 ### 4.3 Flujo principal
 1. Operaciones registra clientes/puntos con GPS en el panel.
-2. Selecciona los puntos del día; el backend los envía a Routes API y obtiene el orden óptimo.
+2. Selecciona los puntos del día (máx. 25); el backend obtiene el orden óptimo (Routes API o respaldo local).
 3. La ruta ordenada se asigna a un camión/chofer.
 4. El chofer ve la ruta en la app, navega con Waze/Maps y registra el pesaje en cada punto.
 5. Sin señal, el pesaje se guarda localmente y se sincroniza al recuperar red.
@@ -89,14 +93,14 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 - Exportar trazabilidad por cliente/periodo (admin).
 
 ### 5.2 Contratos e interfaces
-- **APIs:** REST/JSON FastAPI (usuarios/auth, clientes, puntos, rutas, pesajes, exportes). Detalle pendiente (ver [backlog.md](backlog.md)).
+- **APIs:** REST/JSON FastAPI; contrato vivo en `/docs` (OpenAPI) del repo de implementación. Recursos: `/auth`, `/users`, `/clients`, `/points`, `/trucks`, `/routes` (+ `/routes/optimize`, `/routes/mine`), `/weighings` (+ `/weighings/batch`), `/dashboard`, `/reports/traceability.csv`.
 - **Integraciones externas:** Google Maps Routes API (límite ~25 waypoints intermedios por consulta); deep links a Waze/Google Maps.
-- **Sync offline:** pesajes con ID cliente (UUID) idempotente para evitar duplicados al reenviar.
+- **Sync offline:** el cliente genera el UUID del pesaje; `POST /weighings/batch` responde por ítem `{ok, duplicate, error}`. `ok` o `duplicate` retiran el ítem de la cola; errores de red, 5xx y 401 lo mantienen en cola; errores de validación quedan visibles con reintento manual. Un UUID ya usado por otro chofer se rechaza.
 
 ### 5.3 Modelo de datos (preliminar)
-- **Entidades:** Usuario (rol), Cliente, Punto de recolección (lat/lng), Camión, Ruta, Parada de ruta (orden, estado), Pesaje (kilos, timestamp, chofer, punto).
+- **Entidades:** Usuario (rol), Cliente (tipo: empresa/condominio), Punto de recolección (lat/lng), Camión (patente, capacidad), Ruta (fecha, estado, optimizador usado, origen), Parada de ruta (orden, estado `pending/visited/skipped`), Pesaje (UUID cliente, kilos, material, `weighed_at` del dispositivo, `received_at` del servidor).
 - **Relaciones:** Cliente 1—N Punto; Ruta 1—N Parada; Parada → Punto; Ruta → Camión/Chofer; Pesaje → Parada.
-- **Trazabilidad:** pesajes inmutables con timestamp y autor; exportables por cliente/periodo.
+- **Trazabilidad:** pesajes inmutables con timestamp y autor; exportables por cliente/periodo. Clientes, puntos y camiones se borran de forma lógica (`active=false`) para conservar el historial; una ruta con pesajes no se puede eliminar. El CSV neutraliza fórmulas (`= + - @`) en campos de texto libre.
 
 ## 6) Decisiones de Arquitectura
 Resumen; detalle en [decisions.md](decisions.md).
@@ -109,13 +113,20 @@ Resumen; detalle en [decisions.md](decisions.md).
 | ADR-005 | Google Maps Routes API en MVP | Rapidez; migrar a OR-Tools + OSRM al crecer |
 | ADR-006 | VPS + Docker Compose; frontend en CDN | Costo mínimo |
 | ADR-007 | Tailwind + shadcn/ui + Ionic UI | Estilos transversales |
+| ADR-008 | Optimizador local como respaldo del ruteo | No bloquear el despacho si falla Google o no hay clave |
+| ADR-009 | Pesaje idempotente con UUID generado por el cliente | Reintentos offline sin duplicados |
+| ADR-010 | Monorepo para el MVP | Cambios de API atómicos; separable después |
+| ADR-011 | Dev Container + GitHub Actions | Entorno replicable y verificación en cada PR |
 
 ## 7) Riesgos y Mitigaciones
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Pérdida de pesajes por caché borrada del WebView | Alto | Almacenamiento nativo vía Capacitor (SQLite/Preferences), no solo IndexedDB |
+| Pérdida de pesajes por caché borrada del WebView | Alto | Cola en Capacitor Preferences (implementado). Evaluar SQLite si crece el volumen |
 | GPS se apaga en segundo plano | Medio | Plugin nativo de geolocalización en background (post-MVP) |
 | Google no considera peso/capacidad ni ventanas horarias | Medio | Aceptado en MVP; migrar a OR-Tools |
+| Integración con Google Routes sin validar con clave real | Medio | Probar con clave antes de producción; el respaldo local cubre fallas |
+| Esquema creado con `create_all` (sin migraciones) | Medio | Introducir Alembic antes de datos reales |
+| Auth básica (JWT sin refresh/rotación, secreto de desarrollo) | Medio | Secreto por entorno, expiración corta y refresh antes de producción |
 | Límite de ~25 paradas por ruta | Medio | Dividir lotes; migrar a motor propio |
 | Costo de Routes API al escalar | Medio | Monitorear cuota de $200/mes; caché de matrices; OSRM |
 | Web Bluetooth limitado en iOS | Bajo (post-MVP) | Plugin nativo de BLE |
@@ -123,22 +134,23 @@ Resumen; detalle en [decisions.md](decisions.md).
 
 ## 8) Preguntas Abiertas y Próximos Pasos
 - ¿Modelo de negocio: B2B (empresas) o residencial (edificios/casas)? (Gemini lo preguntó; sin respuesta.)
-- ¿Astro o React para el panel?
-- Estrategia de autenticación y roles (chofer/admin/cliente).
-- Modelo de datos y contrato del endpoint de pesaje (pendiente de detallar).
+- ~~¿Astro o React para el panel?~~ Resuelto: React + Vite (ADR-003).
+- Autenticación: implementados `admin` y `driver`; falta decidir rol `cliente` B2B y refresh de tokens.
+- ~~Modelo de datos y contrato del pesaje~~ Resuelto en la implementación (sección 5).
 - ¿Requisitos exactos de certificado/planilla Ley REP?
 - Tamaño de flota inicial y volumen diario de puntos.
 
 ## 9) Criterios de Aceptación del MVP
-- [ ] Admin crea puntos con GPS y despacha una ruta optimizada a un chofer.
-- [ ] Chofer completa ruta y registra pesajes desde la app.
-- [ ] Pesajes sin señal se sincronizan sin pérdida ni duplicados (prueba física en subterráneo).
-- [ ] Dashboard refleja progreso y kilos de la jornada.
-- [ ] CSV de trazabilidad exportable por cliente/periodo.
+- [x] Admin crea puntos con GPS y despacha una ruta optimizada a un chofer (local).
+- [x] Chofer completa ruta y registra pesajes desde la app (navegador móvil).
+- [ ] Pesajes sin señal se sincronizan sin pérdida ni duplicados — verificado en navegador con modo offline simulado; falta prueba física en subterráneo.
+- [x] Dashboard refleja progreso y kilos de la jornada.
+- [x] CSV de trazabilidad exportable por cliente/periodo.
+- [ ] Apps nativas (iOS/Android) empaquetadas con Capacitor.
 - [ ] Desplegado en producción con costo fijo < ~$30 USD/mes.
 
 ## 10) Referencias
 - [implementation-plan.md](implementation-plan.md) · [backlog.md](backlog.md) · [decisions.md](decisions.md)
 - [conversation-gemini.md](conversation-gemini.md) — contexto original
 - Fuentes originales: [sources/](sources/)
-- Repositorio de implementación: por crear.
+- Repositorio de implementación: [JulioRom/recycling-logistics](https://github.com/JulioRom/recycling-logistics) — ver su README para ejecutar en local o en Dev Container.

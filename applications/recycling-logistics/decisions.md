@@ -10,8 +10,9 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 - **Motivo:** Relacional, robusto, escalable; PostGIS disponible si se requieren consultas geoespaciales.
 
 ## ADR-003 — Frontend desacoplado (Astro o React)
-- **Alternativas:** Streamlit/Reflex (todo Python).
-- **Motivo:** Libertad de UI B2B. Astro vs. React queda **abierto**.
+- **Alternativas:** Streamlit/Reflex (todo Python); Astro.
+- **Motivo:** Libertad de UI B2B.
+- **Actualización 2026-10-05:** se eligió **React + Vite** (SPA con panel autenticado, sin necesidad de SSR/contenido estático) y se comparte stack con la app móvil.
 
 ## ADR-004 — Móvil con Capacitor + Ionic UI
 - **Alternativas:** PWA pura, React Native + Expo, Flet, Kivy/BeeWare.
@@ -29,3 +30,26 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 
 ## ADR-007 — Estilos: Tailwind CSS + shadcn/ui (web) + Ionic UI (móvil)
 - **Alternativas:** DaisyUI, Tremor (útil para dashboards REP), Bootstrap.
+
+## ADR-008 — Optimizador local como respaldo del ruteo
+- **Contexto:** Google Routes exige clave y facturación; puede fallar o rechazar el lote.
+- **Decisión:** `POST /routes` siempre ordena; usa Google si hay `GOOGLE_MAPS_API_KEY`, y cae a vecino más cercano + 2-opt (distancia haversine) si falla o no hay clave. La ruta guarda qué optimizador se usó.
+- **Consecuencia:** el despacho nunca depende de un tercero; el orden local no considera tráfico. Límite de 25 paradas se mantiene.
+
+## ADR-009 — Pesaje idempotente con UUID del cliente
+- **Contexto:** Los choferes registran sin red y reintentan al reconectar.
+- **Decisión:** el UUID del pesaje lo genera la app; el servidor lo usa como clave primaria. Reenvíos devuelven `duplicate`. `POST /weighings/batch` responde por ítem para no bloquear el lote por un error.
+- **Consecuencia:** sincronización segura ante reintentos; un UUID de otro chofer se rechaza.
+
+## ADR-010 — Monorepo para el MVP
+- **Alternativas:** tres repos (backend, web, mobile).
+- **Motivo:** una sola persona/equipo pequeño, contrato de API que cambia seguido, `docker compose` único. Se puede separar luego con `git subtree split`.
+- **Revisar cuando:** haya equipos o ciclos de release distintos (p. ej. publicación en tiendas).
+
+## ADR-011 — Dev Container y CI en GitHub Actions
+- **Decisión:** `.devcontainer/` (Python 3.12, Node 22, Postgres 16 por compose; dependencias en volúmenes para no mezclar binarios Linux/macOS). CI: pytest, build web, test+build móvil y smoke test de `docker compose`.
+- **Motivo:** entorno replicable y verificación automática en cada PR; Node 22 por requisito de Vite 8.
+
+## ADR-012 — Borrado lógico
+- **Decisión:** clientes, puntos y camiones se desactivan (`active=false`); rutas con pesajes no se eliminan.
+- **Motivo:** trazabilidad para auditoría Ley REP.

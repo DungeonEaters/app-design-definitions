@@ -1,14 +1,14 @@
 # Plan de Implementación — Logística y Recolección de Plásticos (MVP)
 
-Duración estimada: **10–12 semanas**, equipo de 2 (1 Full-Stack, 1 Frontend). Diseño en [architecture.md](architecture.md); tareas en [backlog.md](backlog.md).
+Repositorio: [JulioRom/recycling-logistics](https://github.com/JulioRom/recycling-logistics). Duración estimada: **10–12 semanas**, equipo de 2 (1 Full-Stack, 1 Frontend). Diseño en [architecture.md](architecture.md); tareas en [backlog.md](backlog.md).
 
 ## Estado de fases
 | Fase | Semanas | Estado |
 |---|---|---|
-| 1. Setup y Modelado | 1–2 | Pendiente |
-| 2. Motor Backend y Rutas | 3–5 | Pendiente |
-| 3. Panel Web B2B | 6–8 | Pendiente |
-| 4. App Móvil Híbrida | 9–11 | Pendiente |
+| 1. Setup y Modelado | 1–2 | Hecho (2026-10-05) |
+| 2. Motor Backend y Rutas | 3–5 | Hecho en local; falta validar Google Routes con clave real |
+| 3. Panel Web B2B | 6–8 | Hecho en local |
+| 4. App Móvil Híbrida | 9–11 | UI y offline hechos en navegador; falta empaquetado nativo con Capacitor |
 | 5. Pruebas QA y Lanzamiento | 12 | Pendiente |
 
 ## Fase 1 — Setup y Modelado (Semanas 1–2)
@@ -49,3 +49,8 @@ Alternativas evaluadas: Render/Railway ($0–10), GCP Cloud Run (barato) pero Cl
 
 ## Bloqueadores y riesgos
 Ver sección 7 de [architecture.md](architecture.md) y [backlog.md](backlog.md).
+
+## Estado de la implementación (2026-10-05)
+- **Hecho:** API FastAPI + PostgreSQL con auth/roles, CRUD, rutas optimizadas, pesaje idempotente, dashboard y CSV; panel web; app de choferes con cola offline; tests (backend 9, móvil 9); Dev Container; CI en GitHub Actions.
+- **Verificación:** flujo completo en local, incluido pesaje offline → sincronización, con navegador automatizado.
+- **Pendiente para producción:** clave de Google Routes, migraciones (Alembic), endurecimiento de auth (secretos, refresh), `cap add ios/android`, prueba física sin señal, despliegue (VPS + CDN), backups de BD.
