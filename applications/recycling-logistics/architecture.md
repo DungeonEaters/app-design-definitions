@@ -139,6 +139,7 @@ Resumen; detalle en [decisions.md](decisions.md).
 
 ## 10) Referencias
 - [implementation-plan.md](implementation-plan.md) · [backlog.md](backlog.md) · [decisions.md](decisions.md)
+- [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md) — provisión de la base Oracle Cloud Always Free, DNS, red y operación
 - [conversation-gemini.md](conversation-gemini.md) — contexto original
 - Fuentes originales: [sources/](sources/)
 - Repositorio de implementación: por crear.
