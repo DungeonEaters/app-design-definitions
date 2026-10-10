@@ -69,3 +69,10 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 - **Decisión:** Caddy es el único servicio que publica 80/443. Sirve tres dominios: panel en el dominio principal, app móvil en `driver.` y API en `api.`.
 - **Motivo:** certificados Let's Encrypt automáticos y aislamiento de los servicios internos.
 - **Consecuencia:** los tres registros DNS deben apuntar a la VM antes del primer despliegue. Compose con una réplica no garantiza cero downtime durante recreación; es una limitación aceptada del MVP.
+
+## ADR-016 — Oracle Cloud Always Free como base del MVP
+- **Decisión:** Usar una instancia Ubuntu Ampere A1 ARM64 Always Free, hasta 4 OCPUs y 24 GB RAM, como base de los ambientes de test y producción del MVP.
+- **Motivo:** Costo de infraestructura fijo cero dentro de la cuota, capacidad suficiente para API, PostgreSQL, frontends estáticos y reverse proxy en la etapa de validación.
+- **Alternativas:** VPS Hetzner/DigitalOcean, Render/Railway, GCP Cloud Run + Cloud SQL.
+- **Consecuencias:** Test y producción comparten host, por lo que no tienen aislamiento fuerte ni alta disponibilidad. Solo Caddy expone 80/443; el despliegue usa imágenes ARM64 desde GHCR. Se requiere backup de PostgreSQL, monitoreo y migración a infraestructura separada cuando el riesgo/carga lo justifique.
+- **Operación:** Ver [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md). Terraform se mantiene en [DungeonEaters/recycling-logistics-infrastructure](https://github.com/DungeonEaters/recycling-logistics-infrastructure).
