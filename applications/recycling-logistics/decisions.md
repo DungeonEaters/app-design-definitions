@@ -24,9 +24,10 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 - **Motivo:** Más rápido para validar. Considera tráfico. Limitaciones: ~25 waypoints, sin peso/ventanas horarias, costo por consulta.
 - **Evolución:** migrar a OR-Tools + OSRM autoalojado al crecer la flota.
 
-## ADR-006 — Hosting: VPS con Docker Compose + frontend en CDN
-- **Alternativas:** Render/Railway, GCP Cloud Run (Cloud SQL ~$10–25/mes lo encarece), AWS/Azure.
-- **Motivo:** Mejor rendimiento por dólar (~$5–10/mes); un VPS puede alojar OSRM después.
+## ADR-006 — Oracle Cloud Always Free ARM64 + Docker Compose + Caddy
+- **Alternativas:** Render/Railway, GCP Cloud Run (Cloud SQL ~$10–25/mes lo encarece), AWS/Azure, VPS + CDN para frontend.
+- **Motivo:** Costo fijo mínimo; la VM ARM64 puede alojar los cuatro servicios y eventualmente OSRM. Caddy resuelve TLS de Let's Encrypt sin servicio adicional.
+- **Consecuencia:** PostgreSQL, API y frontends comparten una VM; se requieren backups y monitoreo. La base de datos no se expone públicamente.
 
 ## ADR-007 — Estilos: Tailwind CSS + shadcn/ui (web) + Ionic UI (móvil)
 - **Alternativas:** DaisyUI, Tremor (útil para dashboards REP), Bootstrap.
@@ -53,3 +54,18 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 ## ADR-012 — Borrado lógico
 - **Decisión:** clientes, puntos y camiones se desactivan (`active=false`); rutas con pesajes no se eliminan.
 - **Motivo:** trazabilidad para auditoría Ley REP.
+
+## ADR-013 — Imágenes multi-stage para producción
+- **Decisión:** `web` y `mobile` compilan con Node 22 y su resultado se sirve desde Nginx Alpine; la API ejecuta Uvicorn sin `--reload`.
+- **Motivo:** Vite es servidor de desarrollo, no de producción. Nginx reduce tamaño de imagen y soporta las rutas SPA con `try_files`.
+- **Consecuencia:** `VITE_API_URL` se define al construir la imagen; cada despliegue genera una imagen para el dominio de producción.
+
+## ADR-014 — GHCR y despliegue ARM64 por GitHub Actions
+- **Decisión:** el push a `main` construye imágenes `linux/arm64` para `api`, `web` y `mobile`, las etiqueta con SHA y las publica en GHCR. El job de despliegue se conecta por SSH a Oracle Cloud, actualiza el tag y ejecuta Compose.
+- **Motivo:** la VM Always Free es ARM64; etiquetar con SHA permite saber exactamente qué commit corre.
+- **Consecuencia:** la VM requiere un token de solo lectura de paquetes para descargar imágenes privadas; secretos permanecen en `.env` de la VM.
+
+## ADR-015 — Caddy como reverse proxy de producción
+- **Decisión:** Caddy es el único servicio que publica 80/443. Sirve tres dominios: panel en el dominio principal, app móvil en `driver.` y API en `api.`.
+- **Motivo:** certificados Let's Encrypt automáticos y aislamiento de los servicios internos.
+- **Consecuencia:** los tres registros DNS deben apuntar a la VM antes del primer despliegue. Compose con una réplica no garantiza cero downtime durante recreación; es una limitación aceptada del MVP.

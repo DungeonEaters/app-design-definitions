@@ -6,7 +6,7 @@
 - **Estado:** En implementación (MVP local funcionando)
 - **Responsable técnico:** Por definir
 - **Última actualización:** 2026-10-05
-- **Repositorio de implementación:** [JulioRom/recycling-logistics](https://github.com/JulioRom/recycling-logistics) (monorepo: `backend/`, `web/`, `mobile/`)
+- **Repositorio de implementación:** [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics) (monorepo: `backend/`, `web/`, `mobile/`)
 - **Origen:** Conversación con Gemini, ver [conversation-gemini.md](conversation-gemini.md) y [sources/](sources/).
 
 ## 2) Contexto y Alcance
@@ -74,8 +74,9 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 | Panel Admin | Gestión comercial, asignación de rutas, dashboard, trazabilidad | React 18 + Vite, Tailwind v4, componentes estilo shadcn/ui, TanStack Query, Leaflet |
 | App Móvil | Ruta activa, pesaje, offline sync | React + Vite, Ionic UI, Capacitor (Preferences) |
 | Motor de ruteo (MVP) | Ordenar paradas (VRP simple) | Google Routes API `optimizeWaypointOrder`; respaldo local NN + 2-opt |
-| Infra | Contenedores del backend + DB; CDN para frontend | Docker Compose en VPS; Vercel / Cloudflare Pages |
-| Entorno y CI | Entorno replicable y verificación automática | Dev Container (Python + Node + Postgres), GitHub Actions |
+| Infra local | Servicios aislados con hot reload | Docker Compose: `db`, `api`, `web`, `mobile` |
+| Infra producción | Imágenes inmutables y TLS | Oracle Cloud ARM64, Docker Compose, GHCR, Caddy, Nginx |
+| Entorno y CI/CD | Entorno replicable, validación y despliegue | Dev Container (Python + Node), GitHub Actions |
 
 ### 4.3 Flujo principal
 1. Operaciones registra clientes/puntos con GPS en el panel.
@@ -111,12 +112,15 @@ Resumen; detalle en [decisions.md](decisions.md).
 | ADR-003 | Frontend desacoplado (React/Astro) | Libertad de UI B2B vs. Streamlit/Django admin |
 | ADR-004 | Capacitor + Ionic para móvil | Reutilizar código web, acceso a plugins nativos |
 | ADR-005 | Google Maps Routes API en MVP | Rapidez; migrar a OR-Tools + OSRM al crecer |
-| ADR-006 | VPS + Docker Compose; frontend en CDN | Costo mínimo |
+| ADR-006 | Oracle Cloud Always Free ARM64 + Docker Compose; Caddy como reverse proxy | Costo fijo mínimo y TLS automático |
 | ADR-007 | Tailwind + shadcn/ui + Ionic UI | Estilos transversales |
 | ADR-008 | Optimizador local como respaldo del ruteo | No bloquear el despacho si falla Google o no hay clave |
 | ADR-009 | Pesaje idempotente con UUID generado por el cliente | Reintentos offline sin duplicados |
 | ADR-010 | Monorepo para el MVP | Cambios de API atómicos; separable después |
 | ADR-011 | Dev Container + GitHub Actions | Entorno replicable y verificación en cada PR |
+| ADR-013 | Imágenes multi-stage Nginx para web y móvil | No ejecutar Vite en producción; imágenes pequeñas e inmutables |
+| ADR-014 | GHCR + despliegue SSH desde GitHub Actions | Publicar ARM64 y desplegar el commit exacto en la VM |
+| ADR-015 | Caddy como único punto público | TLS Let's Encrypt automático; API/panel/app no exponen puertos directamente |
 
 ## 7) Riesgos y Mitigaciones
 | Riesgo | Impacto | Mitigación |
@@ -131,6 +135,9 @@ Resumen; detalle en [decisions.md](decisions.md).
 | Costo de Routes API al escalar | Medio | Monitorear cuota de $200/mes; caché de matrices; OSRM |
 | Web Bluetooth limitado en iOS | Bajo (post-MVP) | Plugin nativo de BLE |
 | Un VPS único sin alta disponibilidad | Medio | Backups de DB; migrar a gestionado al validar |
+| Reinicio breve durante `docker compose up` en producción | Medio | Compose con una réplica no garantiza cero downtime; introducir réplicas y un orquestador/balanceador cuando sea requisito |
+| Credenciales de producción en repositorio | Alto | `.env` solo en la VM, permisos `600`, secretos/variables en GitHub Actions |
+| Certificado TLS no emitido | Alto | DNS de dominio, `driver` y `api` apuntan a la VM; abrir 80/443 en Oracle Cloud y firewall |
 
 ## 8) Preguntas Abiertas y Próximos Pasos
 - ¿Modelo de negocio: B2B (empresas) o residencial (edificios/casas)? (Gemini lo preguntó; sin respuesta.)
@@ -153,4 +160,4 @@ Resumen; detalle en [decisions.md](decisions.md).
 - [implementation-plan.md](implementation-plan.md) · [backlog.md](backlog.md) · [decisions.md](decisions.md)
 - [conversation-gemini.md](conversation-gemini.md) — contexto original
 - Fuentes originales: [sources/](sources/)
-- Repositorio de implementación: [JulioRom/recycling-logistics](https://github.com/JulioRom/recycling-logistics) — ver su README para ejecutar en local o en Dev Container.
+- Repositorio de implementación: [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics) — ver su README para ejecutar en local, con Dev Container o en Oracle Cloud.

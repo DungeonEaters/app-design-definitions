@@ -39,8 +39,8 @@ Repositorio: [JulioRom/recycling-logistics](https://github.com/JulioRom/recyclin
 ## Infraestructura y presupuesto mensual
 | Ítem | Opción | Costo |
 |---|---|---|
-| Backend + BD | VPS (Hetzner / DigitalOcean) con Docker | ~$5–10 USD |
-| Frontend web | Vercel / Cloudflare Pages | $0 |
+| Backend, BD y frontends | Oracle Cloud Always Free ARM64 con Docker Compose | $0 (dentro de cuota) |
+| Reverse proxy y TLS | Caddy + Let's Encrypt | $0 |
 | Mapas y rutas | Google Maps Routes API (crédito $200/mes) | $0 |
 | Dominio y correo | Namecheap / Google Workspace | ~$15 USD |
 | **Total** | | **< ~$30 USD** |
@@ -53,4 +53,5 @@ Ver sección 7 de [architecture.md](architecture.md) y [backlog.md](backlog.md).
 ## Estado de la implementación (2026-10-05)
 - **Hecho:** API FastAPI + PostgreSQL con auth/roles, CRUD, rutas optimizadas, pesaje idempotente, dashboard y CSV; panel web; app de choferes con cola offline; tests (backend 9, móvil 9); Dev Container; CI en GitHub Actions.
 - **Verificación:** flujo completo en local, incluido pesaje offline → sincronización, con navegador automatizado.
-- **Pendiente para producción:** clave de Google Routes, migraciones (Alembic), endurecimiento de auth (secretos, refresh), `cap add ios/android`, prueba física sin señal, despliegue (VPS + CDN), backups de BD.
+- **Hecho (preparación de producción):** imágenes ARM64 publicables en GHCR, Compose de producción sin mounts, Caddy/TLS, workflow de despliegue SSH y guía de secretos.
+- **Pendiente para producción:** configurar DNS y firewall Oracle Cloud, crear `.env` en VM y secretos/variables de GitHub, clave de Google Routes, migraciones (Alembic), endurecimiento de auth (secretos, refresh), `cap add ios/android`, prueba física sin señal, primer despliegue y backups de BD.
