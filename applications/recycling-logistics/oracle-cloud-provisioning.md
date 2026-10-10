@@ -4,7 +4,7 @@
 
 Ejecutar los ambientes `test` y `production` en una VM Ubuntu ARM64 Ampere A1 de Oracle Cloud Always Free. Ambos ambientes comparten la VM por costo, pero mantienen directorios, bases de datos, volúmenes, redes, secretos y subdominios separados.
 
-La infraestructura declarativa vive en [DungeonEaters/recycling-logistics-infrastructure](https://github.com/DungeonEaters/recycling-logistics-infrastructure). El código, imágenes GHCR y workflows viven en [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics).
+La infraestructura declarativa y runtime viven en [DungeonEaters/recycling-infra](https://github.com/DungeonEaters/recycling-infra). El código de aplicación vive en sus repositorios de backend, web y móvil.
 
 ## Arquitectura objetivo
 
@@ -66,8 +66,8 @@ El repo de infraestructura crea:
 Pasos iniciales:
 
 ```bash
-git clone https://github.com/DungeonEaters/recycling-logistics-infrastructure.git
-cd recycling-logistics-infrastructure/environments/production
+git clone https://github.com/DungeonEaters/recycling-infra.git
+cd recycling-infra/environments/production
 cp terraform.tfvars.example terraform.tfvars
 chmod 600 terraform.tfvars
 terraform init

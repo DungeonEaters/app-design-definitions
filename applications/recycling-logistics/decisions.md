@@ -75,4 +75,4 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 - **Motivo:** Costo de infraestructura fijo cero dentro de la cuota, capacidad suficiente para API, PostgreSQL, frontends estáticos y reverse proxy en la etapa de validación.
 - **Alternativas:** VPS Hetzner/DigitalOcean, Render/Railway, GCP Cloud Run + Cloud SQL.
 - **Consecuencias:** Test y producción comparten host, por lo que no tienen aislamiento fuerte ni alta disponibilidad. Solo Caddy expone 80/443; el despliegue usa imágenes ARM64 desde GHCR. Se requiere backup de PostgreSQL, monitoreo y migración a infraestructura separada cuando el riesgo/carga lo justifique.
-- **Operación:** Ver [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md). Terraform se mantiene en [DungeonEaters/recycling-logistics-infrastructure](https://github.com/DungeonEaters/recycling-logistics-infrastructure).
+- **Operación:** Ver [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md). Terraform y runtime se mantienen en [DungeonEaters/recycling-infra](https://github.com/DungeonEaters/recycling-infra).
