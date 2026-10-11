@@ -6,7 +6,7 @@
 - **Estado:** En implementación (MVP local funcionando)
 - **Responsable técnico:** Por definir
 - **Última actualización:** 2026-10-05
-- **Repositorio de implementación:** [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics) (monorepo: `backend/`, `web/`, `mobile/`)
+- **Repositorios de implementación (polyrepo, ver ADR-017):** [recycling-backend](https://github.com/DungeonEaters/recycling-backend), [recycling-web](https://github.com/DungeonEaters/recycling-web), [recycling-mobile](https://github.com/DungeonEaters/recycling-mobile), [recycling-infra](https://github.com/DungeonEaters/recycling-infra) (Compose/Caddy/Terraform). El monorepo original [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics) queda legado.
 - **Origen:** Conversación con Gemini, ver [conversation-gemini.md](conversation-gemini.md) y [sources/](sources/).
 
 ## 2) Contexto y Alcance
@@ -76,7 +76,7 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 | Motor de ruteo (MVP) | Ordenar paradas (VRP simple) | Google Routes API `optimizeWaypointOrder`; respaldo local NN + 2-opt |
 | Infra local | Servicios aislados con hot reload | Docker Compose: `db`, `api`, `web`, `mobile` |
 | Infra producción | Imágenes inmutables y TLS | Oracle Cloud ARM64, Docker Compose, GHCR, Caddy, Nginx |
-| Entorno y CI/CD | Entorno replicable, validación y despliegue | Dev Container (Python + Node), GitHub Actions |
+| Entorno y CI/CD | Entorno replicable, validación y publicación versionada (SemVer, ver [cicd-strategy.md](cicd-strategy.md)) | Dev Container (Python + Node), GitHub Actions por repo |
 
 ### 4.3 Flujo principal
 1. Operaciones registra clientes/puntos con GPS en el panel.
@@ -94,7 +94,7 @@ Ideas evaluadas y diferidas (ver [backlog.md](backlog.md)):
 - Exportar trazabilidad por cliente/periodo (admin).
 
 ### 5.2 Contratos e interfaces
-- **APIs:** REST/JSON FastAPI; contrato vivo en `/docs` (OpenAPI) del repo de implementación. Recursos: `/auth`, `/users`, `/clients`, `/points`, `/trucks`, `/routes` (+ `/routes/optimize`, `/routes/mine`), `/weighings` (+ `/weighings/batch`), `/dashboard`, `/reports/traceability.csv`.
+- **APIs:** REST/JSON FastAPI; contrato vivo en `/docs` (OpenAPI) de [recycling-backend](https://github.com/DungeonEaters/recycling-backend). Recursos: `/auth`, `/users`, `/clients`, `/points`, `/trucks`, `/routes` (+ `/routes/optimize`, `/routes/mine`), `/weighings` (+ `/weighings/batch`), `/dashboard`, `/reports/traceability.csv`.
 - **Integraciones externas:** Google Maps Routes API (límite ~25 waypoints intermedios por consulta); deep links a Waze/Google Maps.
 - **Sync offline:** el cliente genera el UUID del pesaje; `POST /weighings/batch` responde por ítem `{ok, duplicate, error}`. `ok` o `duplicate` retiran el ítem de la cola; errores de red, 5xx y 401 lo mantienen en cola; errores de validación quedan visibles con reintento manual. Un UUID ya usado por otro chofer se rechaza.
 
@@ -116,11 +116,15 @@ Resumen; detalle en [decisions.md](decisions.md).
 | ADR-007 | Tailwind + shadcn/ui + Ionic UI | Estilos transversales |
 | ADR-008 | Optimizador local como respaldo del ruteo | No bloquear el despacho si falla Google o no hay clave |
 | ADR-009 | Pesaje idempotente con UUID generado por el cliente | Reintentos offline sin duplicados |
-| ADR-010 | Monorepo para el MVP | Cambios de API atómicos; separable después |
+| ADR-010 | Monorepo para el MVP (reemplazado) | Ver ADR-017: ahora polyrepo |
 | ADR-011 | Dev Container + GitHub Actions | Entorno replicable y verificación en cada PR |
 | ADR-013 | Imágenes multi-stage Nginx para web y móvil | No ejecutar Vite en producción; imágenes pequeñas e inmutables |
 | ADR-014 | GHCR + despliegue SSH desde GitHub Actions | Publicar ARM64 y desplegar el commit exacto en la VM |
 | ADR-015 | Caddy como único punto público | TLS Let's Encrypt automático; API/panel/app no exponen puertos directamente |
+| ADR-016 | Oracle Cloud Always Free como base del MVP | Costo fijo cero dentro de cuota |
+| ADR-017 | Polyrepo (backend/web/mobile/infra) | Versionado y CI/CD independiente por servicio |
+| ADR-018 | SemVer con canales test/release + GitHub Releases | Trazabilidad real de versiones publicadas |
+| ADR-019 (propuesto) | Servicios Oracle Always Free adicionales | Bastion, Monitoring, backups a Object Storage |
 
 ## 7) Riesgos y Mitigaciones
 | Riesgo | Impacto | Mitigación |
@@ -158,7 +162,9 @@ Resumen; detalle en [decisions.md](decisions.md).
 
 ## 10) Referencias
 - [implementation-plan.md](implementation-plan.md) · [backlog.md](backlog.md) · [decisions.md](decisions.md)
+- [cicd-strategy.md](cicd-strategy.md) — estrategia de CI/CD, versionado SemVer y canales test/release
 - [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md) — provisión de la base Oracle Cloud Always Free, DNS, red y operación
+- [oracle-credentials-setup.md](oracle-credentials-setup.md) — paso a paso para obtener y configurar credenciales OCI
 - [conversation-gemini.md](conversation-gemini.md) — contexto original
 - Fuentes originales: [sources/](sources/)
-- Repositorio de implementación: [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics) — ver su README para ejecutar en local, con Dev Container o en Oracle Cloud.
+- Repositorios de implementación (polyrepo): [recycling-backend](https://github.com/DungeonEaters/recycling-backend) · [recycling-web](https://github.com/DungeonEaters/recycling-web) · [recycling-mobile](https://github.com/DungeonEaters/recycling-mobile) · [recycling-infra](https://github.com/DungeonEaters/recycling-infra) — ver cada README para ejecutar en local (Dev Container en `recycling-infra`) o desplegar en Oracle Cloud. Monorepo legado: [DungeonEaters/recycling-logistics](https://github.com/DungeonEaters/recycling-logistics).

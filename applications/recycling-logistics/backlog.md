@@ -39,7 +39,10 @@ Prioridad: **P0** MVP · **P1** post-MVP cercano · **P2** futuro. Fases en [imp
 - [ ] D-04 Omitir parada en modo offline (hoy requiere conexión)
 - [ ] D-05 Tests e2e automatizados (Playwright) del flujo admin → chofer → dashboard
 - [ ] D-06 Lint/format (ruff, eslint) en CI
-- [ ] D-07 Pipeline de despliegue (imágenes, VPS, CDN)
+- [ ] D-07 Pipeline de CI/CD completo por repo (ver [cicd-strategy.md](cicd-strategy.md)): `ci.yml` + `release.yml` en recycling-backend/web/mobile, `deploy.yml` adaptado en recycling-infra
+- [ ] D-08 Configurar credenciales Oracle Cloud reales en `recycling-infra` (ver [oracle-credentials-setup.md](oracle-credentials-setup.md)) y ejecutar `terraform plan`/`apply` contra Oracle real
+- [ ] D-09 Primer release versionado (`v0.1.0`) por repo y primer despliegue manual a la VM Oracle
+- [ ] D-10 Activar required status checks (`ci.yml`) en branch protection de recycling-backend/web/mobile una vez exista CI
 
 ## Post-MVP
 | ID | Ítem | Prioridad | Notas |

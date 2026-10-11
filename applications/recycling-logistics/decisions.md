@@ -75,4 +75,26 @@ Fecha de todas las decisiones: 2026-10-04 (origen: [conversation-gemini.md](conv
 - **Motivo:** Costo de infraestructura fijo cero dentro de la cuota, capacidad suficiente para API, PostgreSQL, frontends estáticos y reverse proxy en la etapa de validación.
 - **Alternativas:** VPS Hetzner/DigitalOcean, Render/Railway, GCP Cloud Run + Cloud SQL.
 - **Consecuencias:** Test y producción comparten host, por lo que no tienen aislamiento fuerte ni alta disponibilidad. Solo Caddy expone 80/443; el despliegue usa imágenes ARM64 desde GHCR. Se requiere backup de PostgreSQL, monitoreo y migración a infraestructura separada cuando el riesgo/carga lo justifique.
-- **Operación:** Ver [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md). Terraform y runtime se mantienen en [DungeonEaters/recycling-infra](https://github.com/DungeonEaters/recycling-infra).
+- **Operación:** Ver [oracle-cloud-provisioning.md](oracle-cloud-provisioning.md) y [oracle-credentials-setup.md](oracle-credentials-setup.md). Terraform y runtime se mantienen en [DungeonEaters/recycling-infra](https://github.com/DungeonEaters/recycling-infra).
+
+## ADR-017 — Polyrepo (reemplaza ADR-010)
+- **Contexto:** ADR-010 adoptó monorepo para el MVP y marcó explícitamente "revisar cuando haya equipos o ciclos de release distintos". Se decidió separar antes de eso, para habilitar versionado y CI/CD independientes por componente.
+- **Decisión:** El código se divide en cuatro repositorios bajo `DungeonEaters`: [recycling-backend](https://github.com/DungeonEaters/recycling-backend), [recycling-web](https://github.com/DungeonEaters/recycling-web), [recycling-mobile](https://github.com/DungeonEaters/recycling-mobile) y [recycling-infra](https://github.com/DungeonEaters/recycling-infra) (Compose, Caddy, Terraform). El monorepo original ([recycling-logistics](https://github.com/DungeonEaters/recycling-logistics)) queda legado hasta que el nuevo flujo de CI/CD esté probado en producción.
+- **Motivo:** Permite releases y pipelines independientes por servicio (ver ADR-018), y mantiene `recycling-infra` como único dueño de la configuración de despliegue, separada del código de aplicación.
+- **Consecuencia:** Un cambio de contrato de API que afecte a web/mobile ya no es un commit atómico; requiere coordinar versiones entre repos (mitigado por el OpenAPI publicado en `/docs` del backend).
+
+## ADR-018 — Versionado SemVer con canales test/release y GitHub Releases
+- **Decisión:** Cada repo de aplicación versiona de forma independiente con [SemVer](https://semver.org/). Canal **test**: disparo manual (`workflow_dispatch`), versión con sufijo de pre-release (`vX.Y.Z-rc.N`), publica `test-<version>` en GHCR, sin tag de Git obligatorio. Canal **release**: disparo automático al pushear un tag de Git `vX.Y.Z`, publica `release-<version>` + `latest` en GHCR y crea el GitHub Release correspondiente con notas autogeneradas.
+- **Alternativas:** fecha+sha como venía usándose en el monorepo legado; auto-build en cada push a `main`.
+- **Motivo:** Trazabilidad real vía tags de Git y GitHub Releases; separa "build de prueba bajo demanda" de "versión oficial publicada", sin construir/publicar imágenes de commits que aún no se consideran listos.
+- **Consecuencia:** El despliegue (`recycling-infra/deploy.yml`) sigue siendo manual y recibe un `image_tag` ya publicado; nunca hay despliegue automático al publicar una imagen. Detalle completo en [cicd-strategy.md](cicd-strategy.md).
+
+## ADR-019 (propuesto, no implementado) — Servicios Oracle Always Free adicionales
+- **Contexto:** Más allá del cómputo A1 ya usado, Oracle Always Free ofrece servicios sin costo que podrían reforzar operación y seguridad del MVP sin aumentar el presupuesto.
+- **Propuestas evaluadas:**
+  - **Bastion Service**: eliminar la regla de ingreso SSH permanente (puerto 22 abierto a `ADMIN_CIDRS`) y usar sesiones de Bastion con TTL corto. Mejora de seguridad; no implementado aún por simplicidad del MVP.
+  - **Monitoring + Notifications**: alarmas de CPU/memoria/disco de la VM con aviso por correo, para detectar saturación antes de que afecte el servicio. Costo cero dentro de cuota; no implementado aún.
+  - **Object Storage para backups de PostgreSQL**: `pg_dump` periódico (cron en la VM) subido al mismo bucket usado para el estado de Terraform (o uno dedicado). No implementado; actualmente no hay backup automatizado de la base de datos.
+  - **Autonomous Database (Always Free)**: alternativa gestionada a PostgreSQL en la VM. Requiere migrar el dialecto SQLAlchemy a Oracle (`oracledb`) y no es compatible 1:1 con el esquema actual; se deja como opción a evaluar si el riesgo de operar Postgres en la misma VM del resto de servicios se vuelve inaceptable, no para el MVP.
+  - **OCIR (Oracle Container Registry)** como alternativa/espejo a GHCR: no se adopta — GHCR ya es gratuito, está integrado con los repos y el egress Always Free (10TB/mes) es suficiente para el volumen esperado.
+- **Decisión:** Ninguna de estas se implementa en el alcance actual del MVP; quedan documentadas como candidatas para una futura iteración de endurecimiento/operación (ver `backlog.md`).
