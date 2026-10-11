@@ -94,3 +94,4 @@ Build & test: See [merge-tower-unity CI/CD](./.github/workflows/build.yml).
 
 - [Merge Tower Architecture](applications/merge-tower/architecture.md)
 - [Merge Tower Implementation](../merge-tower-unity/AGENTS.md)
+- [Recycling Logistics Design](https://github.com/DungeonEaters/recycling-logistics-design) — maintained in its dedicated repository; do not recreate it under `applications/`.
